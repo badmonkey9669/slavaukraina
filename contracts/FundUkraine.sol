@@ -10,7 +10,8 @@ contract FundUkraine is ERC1155 {
     using SafeMath for uint;
 
     // Ukraine Donation Receive Address
-    address payable public beneficiary = payable(0x165CD37b4C644C2921454429E7F9358d18A45e14);
+    // Mainnet 0x165CD37b4C644C2921454429E7F9358d18A45e14
+    address payable public beneficiary;
 
     address public  deployer;
 
@@ -33,19 +34,11 @@ contract FundUkraine is ERC1155 {
     // Prices
     mapping(uint8 => uint256) public itemPricesUSD;
 
-    constructor() public ERC1155("https://ipfs.io/ipfs/{id}.json") {
-        // _mint(msg.sender, JAVELIN, 100, "");
-        // _mint(msg.sender, HIMARS, 10, "");
-        // _mint(msg.sender, STINGER, 100, "");
-        // _mint(msg.sender, NASAMS, 10, "");
-        // _mint(msg.sender, NVG, 10000, "");
+    event Withdraw(address to, uint amount);
 
-        // _mint(msg.sender, FOOD, 10e18, "");
-        // _mint(msg.sender, MEDICKIT, 10e18, "");
-        // _mint(msg.sender, WATER, 10e18, "");
-        // _mint(msg.sender, PSYCH, 10e18, "");
-
+    constructor(address _beneficiary) ERC1155("https://ipfs.io/ipfs/{id}.json") {
         deployer = msg.sender;
+        beneficiary = payable(_beneficiary);
 
         itemPricesUSD[0] = 175_203; // Javelin
         itemPricesUSD[1] = 5_100_000; // HIMARS
@@ -87,7 +80,13 @@ contract FundUkraine is ERC1155 {
     * anyone can call this
     */
     function withdraw() public {
+        console.log("contract balance before => ", address(this).balance);
+        
         beneficiary.transfer(address(this).balance);
+
+        console.log("contract balance after => ", address(this).balance);
+
+        emit Withdraw(beneficiary, address(this).balance);
     }
 
     // this contract can receive ETH
