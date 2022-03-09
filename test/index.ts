@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { Contract, ContractFactory } from "ethers";
+import { BigNumber, BigNumberish, Contract, ContractFactory } from "ethers";
 import hre, { ethers } from "hardhat";
 
 import { FundUkraine } from "../typechain";
@@ -14,7 +14,6 @@ describe("FundUkraine", function () {
   let ukraine: FundUkraine;
   let beneficiary: SignerWithAddress;
   let mockDai: Contract;
-
 
   before(async () => {
     const signers = await ethers.getSigners();
@@ -54,8 +53,14 @@ describe("FundUkraine", function () {
     expect(mockDaiBalance.gt(0)).to.be.true;
   });
 
-  it.skip("Should accept DAI to mint", async function () {
+  it("Should accept DAI to mint", async function () {
+    const mockDaiBalance: BigNumber = await mockDai.balanceOf(Bob.address);
 
+    console.log("mockDaiBalance => ", mockDaiBalance);
+
+    // expect(await ukraine.donateWithDai(0, 0)).to.be.revertedWith("you need to donate more than zero.");
+
+    expect(await ukraine.donateWithDai(2, mockDaiBalance.div(10000))).to.emit(ukraine, "TransferSingle");
   })
 
   it.skip("Should accept ETH to mint", async function () {
@@ -69,11 +74,18 @@ describe("FundUkraine", function () {
       to: ukraine.address,
       value
     }).then(async () => {
-        expect(await ethers.provider.getBalance(ukraine.address)).to.equal(value);
+        const ukrBal = await ethers.provider.getBalance(ukraine.address)
+
+        console.log("ukrBal before withdraw => ", ukrBal)
+
+        expect(ukrBal).to.equal(value);
 
         expect(await ukraine.withdraw()).to
           .emit(ukraine, 'Withdraw')
           .withArgs(beneficiary.address, value);
+      })
+      .catch(e => {
+        console.error(e);
       })
     });
 });
